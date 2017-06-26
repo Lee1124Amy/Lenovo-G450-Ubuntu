@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
   printf("\nThe following is the response header:\n");
   i=0;
   /* 连接成功了，接收http响应，response */
-  char js_buf[500];
+  char js_buf[1024],flag=0;
   unsigned int js_len=0;
   memset(js_buf, 0x00, sizeof(js_buf));
   while((nbytes=read(sockfd,buffer,1))==1)
@@ -203,32 +203,51 @@ int main(int argc, char *argv[])
     else  
     {
       printf("%c", buffer[0]);
-
-      js_buf[js_len] = buffer[0];
+      if(buffer[0] == '{')
+      	flag = 1;
+      if(flag == 1)
+           js_buf[js_len++] = buffer[0];
 
 
  //     fwrite(buffer, 1, 1, fp);/*将http主体信息写入文件*/
  //     i++;
  //     if(nbytes%32 == 0)  
  //         fflush(fp);/*每1K时存盘一次*/
-    //从缓冲区中解析出JSON结构
- /*   cJSON * json= cJSON_Parse(buffer);
     
-    //将传入的JSON结构转化为字符串 并打印
-    char *json_data = NULL;
-    printf("data:%s\n",json_data = cJSON_Print(json));
-    
-    free(json_data);
-    //将JSON结构所占用的数据空间释放
-    cJSON_Delete(json);
 
-    */
+    
 
     }
   }
-
-
-      printf("two %s", js_buf);
+    //从缓冲区中解析出JSON结构
+    cJSON* message,*data,*yesterday,*forecast,*arrayItem,*item,*date;
+    cJSON * json= cJSON_Parse(js_buf);
+    //将传入的JSON结构转化为字符串 并打印
+    char *json_data = NULL,*pr = NULL;
+    json_data = cJSON_Print(json);
+    printf("%s\n",json_data);
+    message = cJSON_GetObjectItem(json,"message");
+    printf("message = %s\n",cJSON_Print(message));
+    data = cJSON_GetObjectItem(json,"data");
+    printf("data = %s\n",cJSON_Print(data));
+    yesterday = cJSON_GetObjectItem(data,"yesterday");
+    printf("yesterday = %s\n",cJSON_Print(yesterday));
+    forecast = cJSON_GetObjectItem(data,"forecast");
+    int arr_i = 0;
+    for(arr_i=0;arr_i < cJSON_GetArraySize(forecast);arr_i++)
+    {
+    	 arrayItem = cJSON_GetArrayItem(forecast,arr_i);
+    	 pr=cJSON_Print(arrayItem);
+    	 printf("The %dth is : %s\n",arr_i,pr);
+    	 item = cJSON_Parse(pr);
+         date = cJSON_GetObjectItem(item,"date");
+         printf("date=%s\n",cJSON_Print(date));
+    }
+    free(json_data);
+    //将JSON结构所占用的数据空间释放
+    cJSON_Delete(json);
+    printf("strlen=%d\n",strlen(js_buf));
+    printf("%s", js_buf);
 
 
   fclose(fp);
