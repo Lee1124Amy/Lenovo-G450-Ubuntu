@@ -1,0 +1,3 @@
+Compile in ubuntu16.04
+command : gcc cJSON.c weather_c2.c -lm
+run: ./a.out 济南
